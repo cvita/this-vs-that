@@ -1,1 +1,0 @@
-Ninth iteration of “This vs. That” from 12-29-2016
