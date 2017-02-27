@@ -1,106 +1,109 @@
-$(".searchBtn").click(function() {
-  runSearch();
-});
+// Assigning functionality of buttons
+var conjunction = "vs";
+$(document).ready(function() {
+  document.getElementById("initialSearchInput");
+  initialSearchInput.value = "Enter search and click a button";
+  $("#initialSearchInput").click(function() {
+    initialSearchInput.value = "";
+  });
 
-$("#initialSearchInput").keydown(function(key) {
-  if (key.keyCode === 13) {
+  $("#initialSearchInput").keydown(function(key) {
+    if (key.keyCode === 13) {
+      runSearch();
+      $(this).blur();
+    }
+  });
+
+  $(".vsBtn").click(function() {
+    conjunction = "vs";
     runSearch();
-  }
+  });
+
+  $(".andBtn").click(function() {
+    conjunction = "and";
+    runSearch();
+  });
+
+  $(".orBtn").click(function() {
+    conjunction = "or";
+    runSearch();
+  });
+
+  $(".withBtn").click(function() {
+    conjunction = "with";
+    runSearch();
+  });
 });
 
 function runSearch() {
   // Clear displayed results from any previous searches
   $(".primarySearchResults").html("");
   $(".additionalSearchResults").html("");
-  
-  // Obtain user's search input
-  document.getElementById("initialSearchInput");
-  var initialSearchKeyword = initialSearchInput.value;
-  initialSearchInput.value = "";
-  $(".resultsFor").html('results for "' + initialSearchKeyword + '"');
-  
-  // To store all returned results
-  var resultsArr = [];
 
-  // For recursive searches (see line 44)
+  // Obtain user's search input
+  var initialSearchKeyword = initialSearchInput.value;
+  var resultsArr = [initialSearchKeyword];
+
+  // To iterate through initialSearchKeyword's search results (see line 71)
   var indexCount = 0;
+  var duplicatePositions = [1]; // Initial value of 1 allows initalSearchKeyword to always appear at top of results
 
   // Queries Google's auto-suggestions
   function suggestQueries(searchVal, index) {
-    var apiURL = "http://suggestqueries.google.com/complete/search?client=firefox&callback=?&q=";
-    // Appending the string " vs" to focus results on comparisons
-    $.getJSON(apiURL + searchVal + " vs", function(apiData) {
+    var apiURL = "https://suggestqueries.google.com/complete/search?client=firefox&callback=?&q=";
+    $.getJSON(apiURL + searchVal + " " + conjunction, function(apiData) {
       var returnedResult = apiData[1][index];
-
-      // A useful result must contain " vs "
-      if (/ vs /g.test(returnedResult)) {
-        // Trim the result to eliminate text through "vs ". Then, update value of returnedResult
-        returnedResult = returnedResult.slice(returnedResult.indexOf("vs ") + 3, returnedResult.length);
+      var conjunctionTest = new RegExp(" " + conjunction + " ", "g");
+      if (conjunctionTest.test(returnedResult)) {
+        // Trim the result's text to remove through "vs "
+        returnedResult = returnedResult.slice(returnedResult.indexOf(conjunction + " ") + conjunction.length + 1, returnedResult.length);
         resultsArr.push(returnedResult);
-        // If result isn't useful, push a duplicate to resultsArr
+        // Will begin a new search with the subsequent result from the initial search
       } else {
-        resultsArr.push(resultsArr[resultsArr.length - 1]);
+        resultsArr.push(initialSearchKeyword);
       }
 
       // Returns undefined, unless a duplicate value is found
-      var checkForDuplicate = resultsArr.find(function(elem, pos) {
+      var duplicateValue = resultsArr.find(function(elem, pos) {
         return resultsArr.indexOf(elem) !== pos;
       });
 
-      // If duplicate is found...
-      if (checkForDuplicate !== undefined) {
-        // Remove last item from array, which is the duplicate
+      // No duplicates found. Search again using returnedResult as new keyword
+      if (duplicateValue === undefined) {
+        suggestQueries(returnedResult, 0);
+        $(".resultsFor").html(resultsArr.length - 1 + ' results found for "' + initialSearchKeyword + ' ' + conjunction + '"');
+        // Duplicate found. This specific search chain has completed
+      } else {
         resultsArr.pop();
-        // Display result
-        $(".primarySearchResults").append("<li>" + resultsArr[indexCount] + "</li>");
-        // Run search again, but based on next result of the original search
+        duplicatePositions.push(resultsArr.length);
+        // Repeat original search, iterating through apiData[1], using the subsequent result to begin next search
         if (indexCount < apiData[1].length) {
           indexCount++;
           suggestQueries(initialSearchKeyword, indexCount);
+          // When all search chains based on initialSearchKeyword have completed...
         } else {
-          // Display additional results
-          for (var j = indexCount + 1; j < resultsArr.length; j++) {
-            $(".additionalSearchResults").append("<li>" + resultsArr[j] + "</li>");
+          // Remove duplicate values
+          duplicatePositions = duplicatePositions.filter(function(elem, pos) {
+            return duplicatePositions.indexOf(elem) == pos;
+          });
+
+          // And finally, display results to user
+          for (var i = 1; i < resultsArr.length; i++) {
+            for (var j = 0; j < duplicatePositions[duplicatePositions.length - 1]; j++) {
+              if (i === duplicatePositions[j]) {
+                $(".primarySearchResults").append(
+                  "<li class='resultHeading'>" + initialSearchKeyword + "</li>");
+              }
+            }
+            $(".primarySearchResults").append(
+              "<a href='https://www.google.com/search?q=" + resultsArr[i] + "' target='_blank'>\
+                <li class='results'>" + resultsArr[i] + "</li></a>");
           }
-          $(".resultsFor").prepend(resultsArr.length + " ");
+          $(".resultsFor").html(resultsArr.length - 1 + ' results found for "' + initialSearchKeyword + ' ' + conjunction + '"'); // restated here for cases with zero results
         }
-        // If no duplicate found, repeat search, using result as new search keyword
-      } else {
-        suggestQueries(returnedResult, 0);
       }
     });
   }
-  // Initial call for search. Argument of 0 returns the first result or search
+  // Initial call for suggestQueries()
   suggestQueries(initialSearchKeyword, 0);
 }
-
-// var apiURL = "https://www.googleapis.com/customsearch/v1?&cx=004780494868695699702%3Andpu_iiwfwo&num=1&key="; // num=1 returns 1 result
-// var userKey = "AIzaSyAxXnGEhkkZmEh7zfugJpAsJ7kpSU4GbDc";
-// var initialSearchKeyword;
-// document.getElementById("userSearchTerm");
-// $(".searchBtn").click(function() {
-//   var searchWeb = function() {
-//     initialSearchKeyword = "&q=" + userSearchTerm.value + " vs.";
-//     $.getJSON(apiURL + userKey + initialSearchKeyword, function(primarySearchResults) {
-//       console.log(primarySearchResults);
-
-//       for (var i = 0; i < primarySearchResults.items.length; i++) {
-//         $(".primarySearchResults").append("<li>" + primarySearchResults.items[i].title + "</li>");
-//       }
-//     });
-//     //initialSearchKeyword = "&q=" + primarySearchResults.items[0].title + " vs.";
-
-//   }();
-// });
-
-/*
-Custom search name: web
-Your search engine ID: 004780494868695699702:ndpu_iiwfwo
-
-Your project ID will be this-vs-that-search
-Use this key in your application by passing it with the key=API_KEY parameter.
-AIzaSyAxXnGEhkkZmEh7zfugJpAsJ7kpSU4GbDc  // Restrict key after setup here
-*/
-
-// Why/how does &callback=? enable this api?
-// \s(\w+)|(\d+)(?=\s+vs)

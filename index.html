@@ -2,27 +2,49 @@
 <html >
 <head>
   <meta charset="UTF-8">
-  <title>This vs. That -- in progress 11/26</title>
+  <title>This vs. That -- in progress 11/29</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css?family=Rock+Salt" rel="stylesheet">
   
-  
-  
+  <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'>
+
+      <link rel="stylesheet" href="css/style.css">
+
   
 </head>
 
 <body>
-  <input id="initialSearchInput" type="text"></input>
-<button class="searchBtn">Search</button>
+  <div class="container">
+  <div class="app">
 
-<h3 class="resultsFor"></h3>
+    <div class="row col-md-12">
+      <div class="headerAndSearch">
+        <h1 class="page-header">This vs That</h1>
+        <h3 class="subheading">Compare models and brands, places, or superheroes</h3>
+        <input id="initialSearchInput" type="text"></input>
+      </div>
+      <!-- row col-md-12-->
 
-<h4>Primary</h4>
-<ul class="primarySearchResults"></ul>
+      <div class="row col-md-12">
+        <button class="nowUse vsBtn btn btn-sm">"vs"</button>
+        <button class="nowUse orBtn btn btn-sm">"or"</button>
+        <button class="nowUse andBtn btn btn-sm">"and"</button>
+        <button class="nowUse withBtn btn btn-sm">"with"</button>
+      </div>
+      <!-- row col-md-12-->
+    </div>
+    <!-- headerAndSearch -->
 
-<h4>Additional</h4>
-<ul class="additionalSearchResults"></ul>
-
-<!-- <gcse:search></gcse:search> -->
+    <div class="row col-md-12">
+      <h4 class="resultsFor"></h4>
+      <ol class="primarySearchResults"></ol>
+    </div>
+    <!-- row col-md-12 -->
+  </div>
+  <!-- app -->
+</div>
+<!-- container -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
 
     <script src="js/index.js"></script>
