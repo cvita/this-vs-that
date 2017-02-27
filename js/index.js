@@ -1,20 +1,30 @@
-"use strict";
-
 (function() {
+  "use strict";
+
   $("#initialSearchInput").keydown(function(key) {
     if (key.keyCode === 13) {
       ["vs", "and", "with"].forEach(function(conjunction) {
         runSearch(conjunction);
       });
       $(this).blur();
-      $(".subheading").slideUp();
+      $(".subheading").slideUp("slow");
+      $(".allConjunctionBtns").css("visibility", "visible");
     }
+  });
+
+  $(".searchBtn").click(function() {
+    ["vs", "and", "with"].forEach(function(conjunction) {
+      runSearch(conjunction);
+    });
+    $(this).blur();
+    $(".subheading").slideUp("slow");
+    $(".allConjunctionBtns").css("visibility", "visible");
   });
 
   var searchHistory = [];
 
   function runSearch(conjunction) {
-    styleSelectedConjunctionBtn()
+    styleSelectedConjunctionBtn();
 
     var initialSearchKeyword = initialSearchInput.value;
     suggestQueries(initialSearchKeyword, 0);
@@ -123,6 +133,8 @@
     $("." + searchHistoryBtnClass).click(function() {
       clearDisplayedResults();
       initialSearchInput.value = resultSet[0].searchKeyword;
+      $(this).blur();
+      $(".allConjunctionBtns").css("visibility", "visible");
       resultSet.forEach(function(result) {
         $("." + result.conjunction + "Btn").html('"' + result.conjunction + '"<span class="resultsCountInBtn">' +
           result.totalResults + '</span>');
@@ -173,6 +185,13 @@
 
   $("#initialSearchInput").click(function() {
     clearDisplayedResults();
+    $(".allConjunctionBtns").css("visibility", "hidden");
   });
 
 })();
+
+// BUG: clicking search after results are already displayed, will duplicate displayed results.
+
+// BUG: Shouldn't be able to search a blank initialSearchKeyord
+
+// BUG: CSS - searchBtn border when highlighted appears to be duplicated
