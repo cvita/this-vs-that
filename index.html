@@ -2,7 +2,7 @@
 <html >
 <head>
   <meta charset="UTF-8">
-  <title>This vs. That -- in progress 11/29</title>
+  <title>This vs. That -- in progress 12-2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link href="https://fonts.googleapis.com/css?family=Rock+Salt" rel="stylesheet">
@@ -18,27 +18,26 @@
   <div class="container">
   <div class="app">
 
-    <div class="row col-md-12">
-      <div class="headerAndSearch">
+    <div class="row col-md-12 text-center">
+      <div class="headerAndSearch ">
         <h1 class="page-header">This vs That</h1>
         <h3 class="subheading">Compare models and brands, places, or superheroes</h3>
-        <input id="initialSearchInput" type="text"></input>
-      </div>
-      <!-- row col-md-12-->
+        <input id="initialSearchInput" type="text"></input><br>
 
-      <div class="row col-md-12">
-        <button class="nowUse vsBtn btn btn-sm">"vs"</button>
-        <button class="nowUse orBtn btn btn-sm">"or"</button>
-        <button class="nowUse andBtn btn btn-sm">"and"</button>
-        <button class="nowUse withBtn btn btn-sm">"with"</button>
+        <button class="nowUse vsBtn btn btn-primary">"vs"</button>
+        <button class="nowUse orBtn btn">"or"</button>
+        <button class="nowUse andBtn btn">"and"</button>
+        <button class="nowUse withBtn btn">"with"</button>
       </div>
       <!-- row col-md-12-->
     </div>
     <!-- headerAndSearch -->
 
     <div class="row col-md-12">
-      <h4 class="resultsFor"></h4>
-      <ol class="primarySearchResults"></ol>
+      <ol class="vsSearchResults allSearchResultsList"></ol>
+      <ol class="orSearchResults allSearchResultsList"></ol>
+      <ol class="andSearchResults allSearchResultsList"></ol>
+      <ol class="withSearchResults allSearchResultsList"></ol>
     </div>
     <!-- row col-md-12 -->
   </div>

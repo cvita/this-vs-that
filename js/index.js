@@ -1,109 +1,141 @@
-// Assigning functionality of buttons
-var conjunction = "vs";
 $(document).ready(function() {
   document.getElementById("initialSearchInput");
-  initialSearchInput.value = "Enter search and click a button";
-  $("#initialSearchInput").click(function() {
-    initialSearchInput.value = "";
-  });
-
-  $("#initialSearchInput").keydown(function(key) {
-    if (key.keyCode === 13) {
-      runSearch();
-      $(this).blur();
-    }
-  });
-
-  $(".vsBtn").click(function() {
-    conjunction = "vs";
-    runSearch();
-  });
-
-  $(".andBtn").click(function() {
-    conjunction = "and";
-    runSearch();
-  });
-
-  $(".orBtn").click(function() {
-    conjunction = "or";
-    runSearch();
-  });
-
-  $(".withBtn").click(function() {
-    conjunction = "with";
-    runSearch();
-  });
+  initialSearchInput.value = "Enter search";
 });
 
+$("#initialSearchInput").click(function() {
+  // Clear any previous searches
+  initialSearchInput.value = "";
+  $(".resultsCount").html("");
+  $(".allSearchResultsList").html("");
+  $(".numberOfResultsFound").html("");
+  searchHistoryOfConjunctions = [];
+});
+
+$("#initialSearchInput").keydown(function(key) {
+  if (key.keyCode === 13) {
+    runSearch();
+  }
+});
+
+var conjunction = "vs";
+
+$(".vsBtn").click(function() {
+  conjunction = "vs";
+  runSearch();
+});
+
+$(".andBtn").click(function() {
+  conjunction = "and";
+  runSearch();
+});
+
+$(".orBtn").click(function() {
+  conjunction = "or";
+  runSearch();
+});
+
+$(".withBtn").click(function() {
+  conjunction = "with";
+  runSearch();
+});
+
+function styleSelectedConjunctionBtn() {
+  switch (conjunction) {
+    case "vs":
+      $(".nowUse").removeClass("btn-primary");
+      $(".vsBtn").addClass("btn-primary");
+      break;
+    case "or":
+      $(".nowUse").removeClass("btn-primary");
+      $(".orBtn").addClass("btn-primary");
+      break;
+    case "and":
+      $(".nowUse").removeClass("btn-primary");
+      $(".andBtn").addClass("btn-primary");
+      break;
+    case "with":
+      $(".nowUse").removeClass("btn-primary");
+      $(".withBtn").addClass("btn-primary");
+      break;
+  }
+}
+
+var searchHistoryOfConjunctions = [];
+
 function runSearch() {
-  // Clear displayed results from any previous searches
-  $(".primarySearchResults").html("");
-  $(".additionalSearchResults").html("");
-
-  // Obtain user's search input
+  styleSelectedConjunctionBtn();
+  $(".allSearchResultsList").hide();
+  $("." + conjunction + "SearchResults").show();
   var initialSearchKeyword = initialSearchInput.value;
-  var resultsArr = [initialSearchKeyword];
+  if (searchHistoryOfConjunctions.indexOf(conjunction) === -1) {
+    searchHistoryOfConjunctions.push(conjunction);
+    suggestQueries(initialSearchKeyword, 0); // QUESTION: Is it okay to call a function above where it's declared?
+  }
 
-  // To iterate through initialSearchKeyword's search results (see line 71)
-  var indexCount = 0;
+  var resultsArray = [initialSearchKeyword];
+  var apiDataIndexCount = 0; // To iterate through initialSearchKeyword's search results (see approx. line 113)
   var duplicatePositions = [1]; // Initial value of 1 allows initalSearchKeyword to always appear at top of results
 
-  // Queries Google's auto-suggestions
-  function suggestQueries(searchVal, index) {
+  function suggestQueries(searchKeyword, apiDataIndexPosition) {
     var apiURL = "https://suggestqueries.google.com/complete/search?client=firefox&callback=?&q=";
-    $.getJSON(apiURL + searchVal + " " + conjunction, function(apiData) {
-      var returnedResult = apiData[1][index];
-      var conjunctionTest = new RegExp(" " + conjunction + " ", "g");
-      if (conjunctionTest.test(returnedResult)) {
-        // Trim the result's text to remove through "vs "
-        returnedResult = returnedResult.slice(returnedResult.indexOf(conjunction + " ") + conjunction.length + 1, returnedResult.length);
-        resultsArr.push(returnedResult);
-        // Will begin a new search with the subsequent result from the initial search
-      } else {
-        resultsArr.push(initialSearchKeyword);
-      }
+    $.getJSON(apiURL + searchKeyword + " " + conjunction, function(apiData) {
+      var returnedResult = apiData[1][apiDataIndexPosition];
 
-      // Returns undefined, unless a duplicate value is found
-      var duplicateValue = resultsArr.find(function(elem, pos) {
-        return resultsArr.indexOf(elem) !== pos;
-      });
-
-      // No duplicates found. Search again using returnedResult as new keyword
-      if (duplicateValue === undefined) {
-        suggestQueries(returnedResult, 0);
-        $(".resultsFor").html(resultsArr.length - 1 + ' results found for "' + initialSearchKeyword + ' ' + conjunction + '"');
-        // Duplicate found. This specific search chain has completed
-      } else {
-        resultsArr.pop();
-        duplicatePositions.push(resultsArr.length);
-        // Repeat original search, iterating through apiData[1], using the subsequent result to begin next search
-        if (indexCount < apiData[1].length) {
-          indexCount++;
-          suggestQueries(initialSearchKeyword, indexCount);
-          // When all search chains based on initialSearchKeyword have completed...
-        } else {
-          // Remove duplicate values
-          duplicatePositions = duplicatePositions.filter(function(elem, pos) {
-            return duplicatePositions.indexOf(elem) == pos;
-          });
-
-          // And finally, display results to user
-          for (var i = 1; i < resultsArr.length; i++) {
-            for (var j = 0; j < duplicatePositions[duplicatePositions.length - 1]; j++) {
-              if (i === duplicatePositions[j]) {
-                $(".primarySearchResults").append(
-                  "<li class='resultHeading'>" + initialSearchKeyword + "</li>");
-              }
-            }
-            $(".primarySearchResults").append(
-              "<a href='https://www.google.com/search?q=" + resultsArr[i] + "' target='_blank'>\
-                <li class='results'>" + resultsArr[i] + "</li></a>");
-          }
-          $(".resultsFor").html(resultsArr.length - 1 + ' results found for "' + initialSearchKeyword + ' ' + conjunction + '"'); // restated here for cases with zero results
+      (function validateResults() {
+        var checkForConjunction = new RegExp(" " + conjunction + " ", "g");
+        if (checkForConjunction.test(returnedResult)) {
+          returnedResult = (function removeTextThruConjunction() {
+            var conjunctionPosition = returnedResult.indexOf(conjunction + " ");
+            var conjunctionAndSpace = conjunction.length + 1;
+            return returnedResult.slice(conjunctionPosition + conjunctionAndSpace, returnedResult.length);
+          })();
+          resultsArray.push(returnedResult);
+        } else { // Creates condition to start a new search using next apiDataIndexPosition
+          resultsArray.push(initialSearchKeyword);
         }
-      }
+      })();
+
+      (function manageDuplicatesAndSearchAgain() {
+        var duplicateValue = resultsArray.find(function(val, pos) {
+          return resultsArray.indexOf(val) !== pos;
+        });
+        if (duplicateValue === undefined) { // No duplicates found
+          suggestQueries(returnedResult, 0); // Search again, creating a chain of results
+        } else { // Duplicate found, meaning this specific search chain has completed
+          resultsArray.pop(); // Delete duplicate value
+          duplicatePositions.push(resultsArray.length); // Log end of this search chain's index position
+
+          var resultsCount = "<span class=resultsCount>" + (resultsArray.length - 1) + "</span>";
+          $("." + conjunction + "Btn").html('"' + conjunction + '"' + resultsCount);
+
+          if (apiDataIndexCount < apiData[1].length) {
+            apiDataIndexCount++;
+            suggestQueries(initialSearchKeyword, apiDataIndexCount); // Repeat original search, iterating through apiData[1]
+          } else { // When all search chains based on initialSearchKeyword have completed...
+            duplicatePositions = duplicatePositions.filter(function(val, pos) { // Remove duplicate values
+              return duplicatePositions.indexOf(val) === pos;
+            });
+            (function displayResults() {
+              for (var i = 1; i < resultsArray.length; i++) {
+                for (var j = 0; j < duplicatePositions[duplicatePositions.length - 1]; j++) {
+                  if (i === duplicatePositions[j]) {
+                    $("." + conjunction + "SearchResults").append(
+                      "<li class='resultHeading'>" + initialSearchKeyword + "</li>");
+                  }
+                }
+                $("." + conjunction + "SearchResults").append("<a href='https://www.google.com/search?q=" +
+                  resultsArray[i] + "'target='_blank'>" + "<li class='results'>" + resultsArray[i] + "</li></a>");
+              }
+
+              $("." + conjunction + "SearchResults").prepend('<li class="numberOfResultsFound">' +
+                (resultsArray.length - 1) + ' results found for <b>' + initialSearchKeyword +
+                '</span> <span class="conjunctionUsed">' + conjunction + '</span></b></li>');
+
+            })(); // End of displayResults()
+          } // end of else statement
+        }
+      })(); // End of manageDuplicatesAndSearchAgain()
     });
   }
-  // Initial call for suggestQueries()
-  suggestQueries(initialSearchKeyword, 0);
 }
