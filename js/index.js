@@ -1,3 +1,20 @@
+var initialArtistGenres;
+
+function validateAsArtist(keyword) {
+  $.getJSON("https://api.spotify.com/v1/search?q=" + keyword + "&type=artist", function(spotifyData) {
+    for (var k = 0; k < spotifyData.artists.items.length; k++) {
+      var returnedArtistName = spotifyData.artists.items[k].name.toLowerCase();
+      var artistPopularity = spotifyData.artists.items[k].popularity;
+      if (artistPopularity > 10 && returnedArtistName === keyword) {
+        initialArtistGenres = spotifyData.artists.items[k].genres;
+        var currentArtistGenres = spotifyData.artists.items[k].genres;
+        break;
+      }
+    }
+  });
+}
+
+var listOfArtistsToQuery = [];
 (function() {
   "use strict";
 
@@ -36,6 +53,41 @@
       var apiURL = "https://suggestqueries.google.com/complete/search?client=firefox&callback=?&q=";
       $.getJSON(apiURL + searchKeyword + " " + conjunction, function(apiData) {
         var returnedResult = validateResult(apiData[1][apiDataIndex]);
+
+        validateAsArtist(returnedResult);
+
+        function validateAsArtist(keyword) {
+          $.getJSON("https://api.spotify.com/v1/search?q=" + keyword + "&type=artist", function(spotifyData) {
+            if (spotifyData.artists.items.length === 0) {
+             // console.log(keyword + " is not an artist");
+              resultsArray.push(initialSearchKeyword); // Creates condition to skip this current result
+            } else {
+              for (var k = 0; k < spotifyData.artists.items.length; k++) {
+                var returnedArtistName = spotifyData.artists.items[k].name.toLowerCase();
+                var artistPopularity = spotifyData.artists.items[k].popularity;
+                if (returnedArtistName === keyword && artistPopularity > 10) {
+                  var currentArtistGenres = spotifyData.artists.items[k].genres;
+                  var commonGeneres = initialArtistGenres.filter(function(val) {
+                    return currentArtistGenres.indexOf(val) !== -1;
+                  });
+                  if (commonGeneres !== undefined) {
+                    console.log(commonGeneres);
+                    if (listOfArtistsToQuery.indexOf(keyword) === -1 && keyword !== initialSearchKeyword) {
+                      listOfArtistsToQuery.push(keyword);
+                      console.log(keyword + " looks to be a similar artist!");
+                    }
+                  }
+                  break;
+                }
+                if (k === spotifyData.artists.items.length - 1) {
+                //  console.log(keyword + " is not popular enough to be considered an artist");
+                  resultsArray.push(initialSearchKeyword); // Creates condition to skip this current result
+                }
+              }
+            }
+          });
+        }
+
         resultsArray.push(returnedResult);
 
         if (resultsArray.find(duplicateCheck) === undefined) {
@@ -142,6 +194,7 @@
         displayResults(result, function() {}); // How best omit this empty anonymous function so as not cause an error in console?
       });
     });
+    console.log(listOfArtistsToQuery);
     $(".clearSearchHistoryBtn").show();
   }
 
@@ -185,6 +238,7 @@
 
   $("#initialSearchInput").click(function() {
     clearDisplayedResults();
+    listOfArtistsToQuery = [];
     $(".allConjunctionBtns").css("visibility", "hidden");
   });
 
