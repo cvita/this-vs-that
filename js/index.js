@@ -11,7 +11,7 @@
     }
   });
 
-  var finalResultsStorage = [];
+  var resultObjectStorage = [];
 
   function runSearch(conjunction) {
     styleSelectedConjunctionBtn()
@@ -36,9 +36,12 @@
             apiDataIndexCount++;
             suggestQueries(initialSearchKeyword, apiDataIndexCount);
           } else {
-            displayTotalNumberOfResults();
-            displayResults();
-            finalResultsStorage.push(new StoreFinalResults());
+            var resultObject = new CreateResultObject();
+            resultObjectStorage.push(resultObject);
+            displayTotalNumberOfResults(resultObject);
+            displayResults(resultObject, function() {
+              displaySearchHistory();
+            });
           }
         }
       });
@@ -66,33 +69,77 @@
       $("." + conjunction + "Btn").html('"' + conjunction + '"' + resultsCount);
     }
 
-    function displayTotalNumberOfResults() {
-      $("." + conjunction + "SearchResults").prepend('<li class="numberOfResultsFound">' +
-        (resultsArray.length - 1) + ' results found for <b>' + initialSearchKeyword +
-        '</span> <span style="color:#7ca9be;">' + conjunction + '</span></b></li>');
-    }
-
-    function displayResults() {
-      var searchChainCount = 1;
-      for (var i = 1; i < resultsArray.length; i++) {
-        var previousResult = resultsArray[i - 1];
-        if (duplicatePositions.some(elem => elem === i)) {
-          previousResult = initialSearchKeyword;
-          $("." + conjunction + "SearchResults").append("<li class='resultChainHeading'>Result chain " + searchChainCount + "</li>");
-          searchChainCount++;
-        }
-        var googleSearchLink = "https://www.google.com/search?q=" + previousResult + " " + conjunction + " " + resultsArray[i];
-        $("." + conjunction + "SearchResults").append("<a href='" + googleSearchLink + "'target='_blank'>" +
-          "<li class='individualResult'>" + resultsArray[i] + "</li></a>");
-      }
-    }
-
-    function StoreFinalResults() {
-      this.initialSearchKeyword = initialSearchKeyword;
+    function CreateResultObject() {
+      this.searchKeyword = initialSearchKeyword;
       this.conjunction = conjunction;
-      this.results = resultsArray.slice(1, resultsArray.length);
+      this.searchResultsClass = "." + conjunction + "SearchResults";
+      this.results = resultsArray;
+      this.totalResults = resultsArray.length - 1;
       this.duplicatePositions = duplicatePositions;
     }
+  } // end of runSearch()
+
+  function displayTotalNumberOfResults(resultObject) {
+    $("." + resultObject.conjunction + "SearchResults").prepend('<li class="numberOfResultsFound">' +
+      resultObject.totalResults + ' results found for <b>' + resultObject.searchKeyword +
+      '</span> <span style="color:#7ca9be;">' + resultObject.conjunction + '</span></b></li>');
+  }
+
+  var conjunctionSearchHistory = [];
+
+  function displayResults(resultObject, callback) {
+    var searchChainCount = 1;
+    for (var i = 1; i < resultObject.results.length; i++) {
+      var previousResult = resultObject.results[i - 1] + " ";
+      if (resultObject.duplicatePositions.some(elem => elem === i)) {
+        previousResult = resultObject.searchKeyword + " ";
+        $(resultObject.searchResultsClass).append("<li class='resultChainHeading'>Result chain " + searchChainCount + "</li>");
+        searchChainCount++;
+      }
+      var googleSearchLink = "https://www.google.com/search?q=" + previousResult + resultObject.conjunction + " " + resultObject.results[i];
+      $(resultObject.searchResultsClass).append("<a href='" + googleSearchLink + "'target='_blank'>" +
+        "<li class='individualResult'>" + resultObject.results[i] + "</li></a>");
+    }
+    conjunctionSearchHistory.push(resultObject); // IDEA: just push in resultObject
+    // This allows us to use conjunctionSearchHistory for displaySearchHistory--removing need to carefully iterate through resultObjectStorage and what is now "var i." Should elminate quite a few lines. (Pass conjunctionSearchHistory into displaySearchHistory).
+    if (conjunctionSearchHistory.length === 3) {
+      callback();
+      conjunctionSearchHistory = [];
+    }
+  }
+
+  var i = 0;
+
+  function displaySearchHistory() {
+    conjunctionSearchHistory.forEach(function(val){
+      $(".searchHistory").prepend('<ol><li>' + (val.totalResults) +
+          ' results <span style="color:#7ca9be;">' + val.conjunction + '</span></li></ol>');
+    });
+
+      var searchKeyword = conjunctionSearchHistory[0].searchKeyword;
+      $(".searchHistory").prepend("<li><button class='" + searchKeyword + "ResultsBtn allResultsBtn'>" +
+        searchKeyword + "</button></li>");
+
+      $("." + searchKeyword + "ResultsBtn").click(function() {
+        $(".numberOfResultsFound").html("");
+        $(".allSearchResults").html("");
+        initialSearchInput.value = searchKeyword;
+        
+        var tempArr = conjunctionSearchHistory;
+        resultObjectStorage.forEach(function(individualResultObject) {
+          var currentConjunction = individualResultObject.conjunction;
+          var resultsCount = "<span class='resultsCountInBtn'>" + (individualResultObject.totalResults) + "</span>";
+          $("." + currentConjunction + "Btn").html('"' + currentConjunction + '"' + resultsCount);
+
+          displayTotalNumberOfResults(individualResultObject);
+          displayResults(individualResultObject, function() {
+            console.log("Here's the callback for displayResults, from the result history btn");
+          });
+        });
+        console.log("You just clicked the result history btn for " + searchKeyword);
+      });
+
+      i = resultObjectStorage.length;
   }
 
   var selectedConjunction = "vs"; // Initial default value
@@ -125,5 +172,5 @@
     $(".allSearchResults").html("");
     $(".numberOfResultsFound").html("");
   });
-  
+
 })();
