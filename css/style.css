@@ -100,7 +100,7 @@ body {
   list-style-type: none;
 }
 
-.allResultsBtn {
+.allSeachHistoryBtn {
   min-width: 100%;
   margin-bottom: 1.5em;
   padding: 0.25em 1em;
@@ -110,7 +110,7 @@ body {
   color: white;
 }
 
-.clearSearchHistory {
+.clearSearchHistoryBtn {
   display: none;
   float: right;
   width: 10em;
