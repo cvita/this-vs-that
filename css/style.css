@@ -47,6 +47,16 @@ body {
   color: white;
 }
 
+.resultsCountInSearchHistory {
+  margin: 0em 0em 0em 2em;
+  padding: 0em 0.5em;
+  float: right;
+  border-radius: 1em;
+  background: #d9d9d9;
+  font-size: 0.7em;
+  color: grey;
+}
+
 .numberOfResultsFound {
   padding-top: 1em;
   font-size: 1.15em;
@@ -77,18 +87,37 @@ body {
   background: #f3f3f3;
 }
 
-.searchHistory {
-  margin-top: 3.5em;
+/* a:hover + a {
+  background: pink;
+} */
+
+.individualResult:hover {
+  background: pink;
 }
 
-.searchHistory, li {
+.searchHistory {
+  margin-top: 3.9em;
   list-style-type: none;
 }
 
 .allResultsBtn {
-  padding: 0.15em 2em;
+  min-width: 100%;
+  margin-bottom: 1.5em;
+  padding: 0.25em 1em;
   border-style: none;
   border-radius: 5px;
   background: #96cbe4;
   color: white;
+}
+
+.clearSearchHistory {
+  display: none;
+  float: right;
+  width: 10em;
+  margin-top: -1.5em;
+  border-style: none;
+  background: none;
+  text-decoration: underline;
+  font-size: 0.95em;
+  color: #cecece;
 }

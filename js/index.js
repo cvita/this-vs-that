@@ -11,7 +11,7 @@
     }
   });
 
-  var resultObjectStorage = [];
+  var searchHistory = [];
 
   function runSearch(conjunction) {
     styleSelectedConjunctionBtn()
@@ -37,7 +37,7 @@
             suggestQueries(initialSearchKeyword, apiDataIndexCount);
           } else {
             var resultObject = new CreateResultObject();
-            resultObjectStorage.push(resultObject);
+            searchHistory.push(resultObject);
             displayTotalNumberOfResults(resultObject);
             displayResults(resultObject, function() {
               displaySearchHistory();
@@ -62,11 +62,12 @@
     }
 
     var duplicatePositions = [1]; // Initial value of 1 allows initalSearchKeyword to always appear at top of results
+
     function manageDuplicateAndDisplayCountInBtn() {
       resultsArray.pop();
       duplicatePositions.push(resultsArray.length);
-      var resultsCount = "<span class='resultsCountInBtn'>" + (resultsArray.length - 1) + "</span>";
-      $("." + conjunction + "Btn").html('"' + conjunction + '"' + resultsCount);
+      $("." + conjunction + "Btn").html('"' + conjunction + '"<span class=resultsCountInBtn>' +
+        (resultsArray.length - 1) + '</span>');
     }
 
     function CreateResultObject() {
@@ -79,68 +80,96 @@
     }
   } // end of runSearch()
 
-  function displayTotalNumberOfResults(resultObject) {
-    $("." + resultObject.conjunction + "SearchResults").prepend('<li class="numberOfResultsFound">' +
-      resultObject.totalResults + ' results found for <b>' + resultObject.searchKeyword +
-      '</span> <span style="color:#7ca9be;">' + resultObject.conjunction + '</span></b></li>');
+  function displayTotalNumberOfResults(result) {
+    $("." + result.conjunction + "SearchResults").prepend('<li class="numberOfResultsFound">' +
+      result.totalResults + ' results found for <b>' + result.searchKeyword +
+      '</span> <span style="color:#7ca9be;">' + result.conjunction + '</span></b></li>');
   }
 
-  var conjunctionSearchHistory = [];
-
-  function displayResults(resultObject, callback) {
+  function displayResults(result, callback) {
     var searchChainCount = 1;
-    for (var i = 1; i < resultObject.results.length; i++) {
-      var previousResult = resultObject.results[i - 1] + " ";
-      if (resultObject.duplicatePositions.some(elem => elem === i)) {
-        previousResult = resultObject.searchKeyword + " ";
-        $(resultObject.searchResultsClass).append("<li class='resultChainHeading'>Result chain " + searchChainCount + "</li>");
+    for (var i = 1; i < result.results.length; i++) {
+      var previousResult = result.results[i - 1];
+      if (result.duplicatePositions.some(elem => elem === i)) {
+        previousResult = result.searchKeyword;
+        $(result.searchResultsClass).append("<li class='resultChainHeading'>Result chain " + searchChainCount + "</li>");
         searchChainCount++;
+        //$(result.searchResultsClass).append("<li class='individualResult test"+ i + "'>" + result.searchKeyword + "</li></a>");
       }
-      var googleSearchLink = "https://www.google.com/search?q=" + previousResult + resultObject.conjunction + " " + resultObject.results[i];
-      $(resultObject.searchResultsClass).append("<a href='" + googleSearchLink + "'target='_blank'>" +
-        "<li class='individualResult'>" + resultObject.results[i] + "</li></a>");
+
+      var googleSearchLink = "https://www.google.com/search?q=" + previousResult + " " + result.conjunction + " " + result.results[i];
+      
+      $(result.searchResultsClass).append("<a href='" + googleSearchLink + "'target='_blank'>" +
+        "<li class='individualResult test"+ i + "'>" + result.results[i] + "</li></a>");  
     }
-    conjunctionSearchHistory.push(resultObject); // IDEA: just push in resultObject
-    // This allows us to use conjunctionSearchHistory for displaySearchHistory--removing need to carefully iterate through resultObjectStorage and what is now "var i." Should elminate quite a few lines. (Pass conjunctionSearchHistory into displaySearchHistory).
-    if (conjunctionSearchHistory.length === 3) {
+    
+    window.onmouseover = function(elem) {
+      if (elem.target.className.indexOf("individualResult") > -1) {
+        var currentlyHoveredFull = (elem.target.className.slice(16, elem.target.className.length));
+        var currentlyHovered = "test" + (currentlyHoveredFull.slice(5, currentlyHoveredFull.length));
+        var previousElement = "test" + (currentlyHoveredFull.slice(5, currentlyHoveredFull.length) -1);
+        // if previous element hasClass 'resultChainHeading' then adjust val of previousElement
+        $("." + previousElement).css("background", "pink");
+        $("." + currentlyHovered).mouseout(function(){
+          $("." + previousElement).css("background", "#f3f3f3");
+        });
+      }
+    };
+        
+
+
+    
+    if (searchHistory.length % 3 === 0) {
       callback();
-      conjunctionSearchHistory = [];
     }
   }
-
-  var i = 0;
 
   function displaySearchHistory() {
-    conjunctionSearchHistory.forEach(function(val){
-      $(".searchHistory").prepend('<ol><li>' + (val.totalResults) +
-          ' results <span style="color:#7ca9be;">' + val.conjunction + '</span></li></ol>');
-    });
+    $(".clearSearchHistory").show();
+    for (var recentResultSet = searchHistory.length - 3; recentResultSet < searchHistory.length; recentResultSet++) {
+      switch (searchHistory[recentResultSet].conjunction) {
+        case "vs":
+          var vsResult = searchHistory[recentResultSet];
+          break;
+        case "and":
+          var andResult = searchHistory[recentResultSet];
+          break;
+        case "with":
+          var withResult = searchHistory[recentResultSet];
+          break;
+      }
+    }
+    var resultSet = [vsResult, andResult, withResult];
 
-      var searchKeyword = conjunctionSearchHistory[0].searchKeyword;
-      $(".searchHistory").prepend("<li><button class='" + searchKeyword + "ResultsBtn allResultsBtn'>" +
-        searchKeyword + "</button></li>");
+    var searchKeywordNoSpaces = vsResult.searchKeyword.replace(/\s+/g, "-");
+    $(".searchHistory").prepend("<li><button class='" + searchKeywordNoSpaces + "ResultsBtn allResultsBtn'>" +
+      vsResult.searchKeyword + "</button></li>");
 
-      $("." + searchKeyword + "ResultsBtn").click(function() {
-        $(".numberOfResultsFound").html("");
-        $(".allSearchResults").html("");
-        initialSearchInput.value = searchKeyword;
-        
-        var tempArr = conjunctionSearchHistory;
-        resultObjectStorage.forEach(function(individualResultObject) {
-          var currentConjunction = individualResultObject.conjunction;
-          var resultsCount = "<span class='resultsCountInBtn'>" + (individualResultObject.totalResults) + "</span>";
-          $("." + currentConjunction + "Btn").html('"' + currentConjunction + '"' + resultsCount);
+    var resultSetTotal = vsResult.totalResults + andResult.totalResults + withResult.totalResults;
+    var searchHistoryResultCount = "<span class='resultsCountInSearchHistory'>" + resultSetTotal + "</span>";
 
-          displayTotalNumberOfResults(individualResultObject);
-          displayResults(individualResultObject, function() {
-            console.log("Here's the callback for displayResults, from the result history btn");
-          });
-        });
-        console.log("You just clicked the result history btn for " + searchKeyword);
-      });
-
-      i = resultObjectStorage.length;
+    $("." + searchKeywordNoSpaces + "ResultsBtn").append(searchHistoryResultCount);
+    setupResultHistoryBtnFunctionality(searchKeywordNoSpaces, resultSet);
   }
+
+  function setupResultHistoryBtnFunctionality(searchKeywordNoSpaces, resultSet) {
+    $("." + searchKeywordNoSpaces + "ResultsBtn").click(function() {
+      clearPreviousSearch(resultSet[0].searchKeyword);
+      resultSet.forEach(function(result) {
+        $("." + result.conjunction + "Btn").html('"' + result.conjunction + '"<span class="resultsCountInBtn">' +
+          result.totalResults + '</span>');
+        displayTotalNumberOfResults(result);
+        displayResults(result, function() {}); // How best omit this anonymous function so as not cause an error in console?
+      });
+    });
+  }
+
+  $(".clearSearchHistory").click(function() {
+    searchHistory = [];
+    clearPreviousSearch("");
+    $(".searchHistory").html("");
+    $(".clearSearchHistory").hide();
+  });
 
   var selectedConjunction = "vs"; // Initial default value
 
@@ -167,10 +196,14 @@
   }
 
   $("#initialSearchInput").click(function() {
-    initialSearchInput.value = "";
+    clearPreviousSearch("");
+  });
+
+  function clearPreviousSearch(searchedFor) {
+    initialSearchInput.value = searchedFor;
     $(".resultsCountInBtn").html("");
     $(".allSearchResults").html("");
     $(".numberOfResultsFound").html("");
-  });
+  }
 
 })();

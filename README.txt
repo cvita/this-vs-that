@@ -1,1 +1,1 @@
-Sixth iteration of “This vs. That” from 12-13-2016
+Seventh iteration of “This vs. That” from 12-19-2016
