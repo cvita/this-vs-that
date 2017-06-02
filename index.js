@@ -1,9 +1,9 @@
-(function() {
+(function () {
   "use strict";
 
-  $("#initialSearchInput").keydown(function(key) {
+  $("#initialSearchInput").keydown(key => {
     if (key.keyCode === 13) {
-      ["vs", "and", "with"].forEach(function(conjunction) {
+      ["vs", "and", "with"].forEach(conjunction => {
         runSearch(conjunction);
       });
       $(this).blur();
@@ -12,8 +12,8 @@
     }
   });
 
-  $(".searchBtn").click(function() {
-    ["vs", "and", "with"].forEach(function(conjunction) {
+  $(".searchBtn").click(() => {
+    ["vs", "and", "with"].forEach(conjunction => {
       runSearch(conjunction);
     });
     $(this).blur();
@@ -34,7 +34,7 @@
 
     function suggestQueries(searchKeyword, apiDataIndex) {
       var apiURL = "https://suggestqueries.google.com/complete/search?client=firefox&callback=?&q=";
-      $.getJSON(apiURL + searchKeyword + " " + conjunction, function(apiData) {
+      $.getJSON(apiURL + searchKeyword + " " + conjunction, apiData => {
         var returnedResult = validateResult(apiData[1][apiDataIndex]);
         resultsArray.push(returnedResult);
 
@@ -50,7 +50,7 @@
             var resultObject = new CreateResultObject();
             searchHistory.push(resultObject);
             displayTotalNumberOfResults(resultObject);
-            displayResults(resultObject, function() {
+            displayResults(resultObject, () => {
               displaySearchHistory();
             });
           }
@@ -130,16 +130,16 @@
       resultSet[0].searchKeyword + "</button></li>");
     $("." + searchHistoryBtnClass).append("<span class='resultsCountInSearchHistory'>" + resultSetTotal + "</span>");
 
-    $("." + searchHistoryBtnClass).click(function() {
+    $("." + searchHistoryBtnClass).click(() => {
       clearDisplayedResults();
       initialSearchInput.value = resultSet[0].searchKeyword;
       $(this).blur();
       $(".allConjunctionBtns").css("visibility", "visible");
-      resultSet.forEach(function(result) {
+      resultSet.forEach(result => {
         $("." + result.conjunction + "Btn").html('"' + result.conjunction + '"<span class="resultsCountInBtn">' +
           result.totalResults + '</span>');
         displayTotalNumberOfResults(result);
-        displayResults(result, function() {}); // How best omit this empty anonymous function so as not cause an error in console?
+        displayResults(result, () => { }); // How best omit this empty anonymous function so as not cause an error in console?
       });
     });
     $(".clearSearchHistoryBtn").show();
@@ -152,7 +152,7 @@
     $(".numberOfResultsFound").html("");
   }
 
-  $(".clearSearchHistoryBtn").click(function() {
+  $(".clearSearchHistoryBtn").click(() => {
     searchHistory = [];
     clearDisplayedResults();
     $(".searchHistory").html("");
@@ -161,17 +161,17 @@
 
   var selectedConjunction = "vs"; // Initial default value
 
-  $(".vsBtn").click(function() {
+  $(".vsBtn").click(() => {
     selectedConjunction = "vs";
     styleSelectedConjunctionBtn();
   });
 
-  $(".andBtn").click(function() {
+  $(".andBtn").click(() => {
     selectedConjunction = "and";
     styleSelectedConjunctionBtn();
   });
 
-  $(".withBtn").click(function() {
+  $(".withBtn").click(() => {
     selectedConjunction = "with";
     styleSelectedConjunctionBtn();
   });
@@ -183,7 +183,7 @@
     $("." + selectedConjunction + "SearchResults").show();
   }
 
-  $("#initialSearchInput").click(function() {
+  $("#initialSearchInput").click(() => {
     clearDisplayedResults();
     $(".allConjunctionBtns").css("visibility", "hidden");
   });
