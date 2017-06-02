@@ -3,6 +3,19 @@
 
   $("#initialSearchInput").keydown(key => {
     if (key.keyCode === 13) {
+      if (initialSearchInput.value !== "") {
+        ["vs", "and", "with"].forEach(conjunction => {
+          runSearch(conjunction);
+        });
+        $(this).blur();
+        $(".subheading").slideUp("slow");
+        $(".allConjunctionBtns").css("visibility", "visible");
+      }
+    }
+  });
+
+  $(".searchBtn").click(() => {
+    if (initialSearchInput.value !== "") {
       ["vs", "and", "with"].forEach(conjunction => {
         runSearch(conjunction);
       });
@@ -10,15 +23,6 @@
       $(".subheading").slideUp("slow");
       $(".allConjunctionBtns").css("visibility", "visible");
     }
-  });
-
-  $(".searchBtn").click(() => {
-    ["vs", "and", "with"].forEach(conjunction => {
-      runSearch(conjunction);
-    });
-    $(this).blur();
-    $(".subheading").slideUp("slow");
-    $(".allConjunctionBtns").css("visibility", "visible");
   });
 
   var searchHistory = [];
