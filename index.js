@@ -34,26 +34,29 @@
 
     function suggestQueries(searchKeyword, apiDataIndex) {
       var apiURL = "https://suggestqueries.google.com/complete/search?client=firefox&callback=?&q=";
-      $.getJSON(apiURL + searchKeyword + " " + conjunction, apiData => {
-        var returnedResult = validateResult(apiData[1][apiDataIndex]);
-        resultsArray.push(returnedResult);
+      apiURL += searchKeyword + " " + conjunction;
+      $.getJSON(apiURL)
+        .fail(() => console.log("Unable to obtain result from Google"))
+        .done(apiData => {
+          var returnedResult = validateResult(apiData[1][apiDataIndex]);
+          resultsArray.push(returnedResult);
 
-        if (resultsArray.find(duplicateCheck) === undefined) {
-          suggestQueries(returnedResult, 0);
-        } else {
-          removeDuplicateAndLogPosition();
-          displayResultsCountInBtn(conjunction, (resultsArray.length - 1));
-          if (apiDataIndexCount < apiData[1].length) {
-            apiDataIndexCount++;
-            suggestQueries(initialSearchKeyword, apiDataIndexCount);
+          if (resultsArray.find(duplicateCheck) === undefined) {
+            suggestQueries(returnedResult, 0);
           } else {
-            var resultObject = new CreateResultObject();
-            searchHistory.push(resultObject);
-            displayTotalNumberOfResults(resultObject);
-            displayResults(resultObject, () => displaySearchHistory());
+            removeDuplicateAndLogPosition();
+            displayResultsCountInBtn(conjunction, (resultsArray.length - 1));
+            if (apiDataIndexCount < apiData[1].length) {
+              apiDataIndexCount++;
+              suggestQueries(initialSearchKeyword, apiDataIndexCount);
+            } else {
+              var resultObject = new CreateResultObject();
+              searchHistory.push(resultObject);
+              displayTotalNumberOfResults(resultObject);
+              displayResults(resultObject, () => displaySearchHistory());
+            }
           }
-        }
-      });
+        });
     }
 
     function validateResult(result) {
@@ -137,7 +140,7 @@
         $("." + result.conjunction + "Btn").html('"' + result.conjunction + '"<span class="resultsCountInBtn">' +
           result.totalResults + '</span>');
         displayTotalNumberOfResults(result);
-        displayResults(result, () => {});
+        displayResults(result, () => { });
       });
     });
     $(".clearSearchHistoryBtn").show();
@@ -189,7 +192,5 @@
 })();
 
 // BUG: clicking search after results are already displayed, will duplicate displayed results.
-
-// BUG: Shouldn't be able to search a blank initialSearchKeyord
 
 // BUG: CSS - searchBtn border when highlighted appears to be duplicated
