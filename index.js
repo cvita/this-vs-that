@@ -4,9 +4,7 @@
   $("#initialSearchInput").keydown(key => {
     if (key.keyCode === 13) {
       if (initialSearchInput.value !== "") {
-        ["vs", "and", "with"].forEach(conjunction => {
-          runSearch(conjunction);
-        });
+        ["vs", "and", "with"].forEach(conjunction => runSearch(conjunction));
         $(this).blur();
         $(".subheading").slideUp("slow");
         $(".allConjunctionBtns").css("visibility", "visible");
@@ -16,9 +14,7 @@
 
   $(".searchBtn").click(() => {
     if (initialSearchInput.value !== "") {
-      ["vs", "and", "with"].forEach(conjunction => {
-        runSearch(conjunction);
-      });
+      ["vs", "and", "with"].forEach(conjunction => runSearch(conjunction));
       $(this).blur();
       $(".subheading").slideUp("slow");
       $(".allConjunctionBtns").css("visibility", "visible");
@@ -54,9 +50,7 @@
             var resultObject = new CreateResultObject();
             searchHistory.push(resultObject);
             displayTotalNumberOfResults(resultObject);
-            displayResults(resultObject, () => {
-              displaySearchHistory();
-            });
+            displayResults(resultObject, () => displaySearchHistory());
           }
         }
       });
@@ -143,7 +137,7 @@
         $("." + result.conjunction + "Btn").html('"' + result.conjunction + '"<span class="resultsCountInBtn">' +
           result.totalResults + '</span>');
         displayTotalNumberOfResults(result);
-        displayResults(result, () => { }); // How best omit this empty anonymous function so as not cause an error in console?
+        displayResults(result, () => {});
       });
     });
     $(".clearSearchHistoryBtn").show();
